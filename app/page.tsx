@@ -25,10 +25,14 @@ import {
   ChevronDown,
   ChevronUp,
   Filter,
-  Search
+  Search,
+  Users,
+  User,
+  ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SupplierGroupType } from "@/model/supplier";
+
 
 export default function Home() {
   const [rfqData, setRfqData] = useState<SupplierGroupType[]>([]);
@@ -40,6 +44,8 @@ export default function Home() {
   const [page, setPage] = useState(0);
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
   const [filteredData, setFilteredData] = useState<SupplierGroupType[]>([]);
+  const [expandedRfq, setExpandedRfq] = useState<Record<string, boolean>>({});
+  const [expandedSuppliers, setExpandedSuppliers] = useState<Record<string, Record<string, boolean>>>({});
 
   // API fetch
   useEffect(() => {
@@ -99,6 +105,23 @@ export default function Home() {
     }));
   };
 
+  const toggleRfq = (solicitationNumber: string) => {
+    setExpandedRfq(prev => ({
+      ...prev,
+      [solicitationNumber]: !prev[solicitationNumber]
+    }));
+  };
+
+  const toggleSupplier = (solicitationNumber: string, supplierId: string) => {
+    setExpandedSuppliers(prev => ({
+      ...prev,
+      [solicitationNumber]: {
+        ...prev[solicitationNumber],
+        [supplierId]: !prev[solicitationNumber]?.[supplierId]
+      }
+    }));
+  };
+
   const getSourceCount = (source: string) => {
     return filteredData.filter(rfq => rfq.source === source).length;
   };
@@ -119,8 +142,8 @@ export default function Home() {
           animate={{ opacity: 1 }}
           className="text-center"
         >
-          <div className="h-12 w-12 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-slate-600 dark:text-slate-300">Loading RFQ data...</p>
+          <div className="h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-slate-600 dark:text-slate-400">Loading RFQ data...</p>
         </motion.div>
       </div>
     );
@@ -139,17 +162,17 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent"
+            className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
           >
             RFQ Dashboard
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.3 }}
             className="mt-2 text-slate-600 dark:text-slate-400"
           >
-            Review and manage solicitations by source
+            Manage and track solicitations by source
           </motion.p>
         </div>
 
@@ -194,7 +217,7 @@ export default function Home() {
                   setPsc("");
                   setAgency("");
                 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
               >
                 <Filter className="h-4 w-4" />
                 Clear Filters
@@ -210,12 +233,12 @@ export default function Home() {
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-md"
+              transition={{ delay: 0.1 * index }}
+              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow"
             >
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">{group.source}</h3>
-                <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">
                   {getSourceCount(group.source)} RFQs
                 </Badge>
               </div>
@@ -228,22 +251,22 @@ export default function Home() {
           ))}
         </div>
 
-        {/* RFQ Rows */}
+        {/* RFQ List */}
         <div className="space-y-6">
           {groupedRfqs().map((group, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2 + index * 0.1 }}
             >
               <div 
-                className="flex justify-between items-center p-4 bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border-slate-200 dark:border-slate-700 rounded-lg shadow-md cursor-pointer"
+                className="flex justify-between items-center p-4 bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border-slate-200 dark:border-slate-700 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => toggleSource(group.source)}
               >
                 <div className="flex items-center gap-3">
                   <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{group.source}</h2>
-                  <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                  <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">
                     {group.rfqs.length} RFQs
                   </Badge>
                 </div>
@@ -261,108 +284,235 @@ export default function Home() {
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="mt-4"
+                    className="mt-4 overflow-hidden"
                   >
-                    {/* RFQ Rows */}
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                        <thead className="bg-slate-50 dark:bg-slate-800">
-                          <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Solicitation</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Agency</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">PSC</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Place of Performance</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Delivery Date</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Award Amount</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Supplier</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Contact</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-                          {group.rfqs.map((rfq, index) => (
-                            <motion.tr 
-                              key={index}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: index * 0.05 }}
-                              className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                            >
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <Award className="h-5 w-5 text-slate-600 dark:text-slate-300 mr-2" />
+                    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-md">
+                      {group.rfqs.map((rfq, rfqIndex) => (
+                        <div key={rfqIndex} className="border-b border-slate-200 dark:border-slate-700 last:border-b-0">
+                          <div 
+                            className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                            onClick={() => toggleRfq(rfq.solicitationNumber)}
+                          >
+                            <div className="flex items-start gap-3">
+                              <Award className="h-6 w-6 text-blue-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <h3 className="font-medium text-slate-900 dark:text-slate-100">{rfq.solicitationNumber}</h3>
+                                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                  {rfq.agency}
+                                </p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant="outline" className="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                                    {rfq.contractType}
+                                  </Badge>
+                                  <Badge variant="outline" className="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                                    {rfq.pscDescription}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-slate-500 dark:text-slate-400">
+                                {new Date(rfq.createdAt).toLocaleDateString()}
+                              </span>
+                              <ChevronDown 
+                                className={`h-5 w-5 text-slate-600 dark:text-slate-400 transition-transform ${expandedRfq[rfq.solicitationNumber] ? 'rotate-180' : ''}`} 
+                              />
+                            </div>
+                          </div>
+                          
+                          <AnimatePresence>
+                            {expandedRfq[rfq.solicitationNumber] && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="p-4 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-200 dark:border-slate-700">
+                                  {/* RFQ Details */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                    <div>
+                                      <h4 className="font-medium text-slate-800 dark:text-slate-200 mb-3">RFQ Information</h4>
+                                      <div className="space-y-2">
+                                        <div className="flex items-start gap-2">
+                                          <Building className="h-4 w-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+                                          <div>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Agency</p>
+                                            <p className="text-sm text-slate-700 dark:text-slate-300">{rfq.agency}</p>
+                                          </div>
+                                        </div>
+                                        
+                                        {rfq.subAgency && (
+                                          <div className="flex items-start gap-2">
+                                            <Building className="h-4 w-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+                                            <div>
+                                              <p className="text-xs text-slate-500 dark:text-slate-400">Sub-Agency</p>
+                                              <p className="text-sm text-slate-700 dark:text-slate-300">{rfq.subAgency}</p>
+                                            </div>
+                                          </div>
+                                        )}
+                                        
+                                        <div className="flex items-start gap-2">
+                                          <MapPin className="h-4 w-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+                                          <div>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Place of Performance</p>
+                                            <p className="text-sm text-slate-700 dark:text-slate-300">{rfq.placeOfPerformance || "Not specified"}</p>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="flex items-start gap-2">
+                                          <Calendar className="h-4 w-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+                                          <div>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Delivery Date</p>
+                                            <p className="text-sm text-slate-700 dark:text-slate-300">
+                                              {rfq.deliveryDate ? new Date(rfq.deliveryDate).toLocaleDateString() : "Not specified"}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div>
+                                      <h4 className="font-medium text-slate-800 dark:text-slate-200 mb-3">Financial Details</h4>
+                                      <div className="space-y-2">
+                                        <div className="flex items-start gap-2">
+                                          <DollarSign className="h-4 w-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+                                          <div>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">NAICS Code</p>
+                                            <p className="text-sm text-slate-700 dark:text-slate-300">{rfq.naicsCode} - {rfq.naicsDescription}</p>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="flex items-start gap-2">
+                                          <Target className="h-4 w-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+                                          <div>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">PSC Code</p>
+                                            <p className="text-sm text-slate-700 dark:text-slate-300">{rfq.pscCode} - {rfq.pscDescription}</p>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="flex items-start gap-2">
+                                          <Package className="h-4 w-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+                                          <div>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Contract Type</p>
+                                            <p className="text-sm text-slate-700 dark:text-slate-300">{rfq.contractType}</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Suppliers Section */}
                                   <div>
-                                    <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{rfq.solicitationNumber}</div>
-                                    <div className="text-sm text-slate-500 dark:text-slate-400">{rfq.contractType}</div>
+                                    <h4 className="font-medium text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+                                      <Users className="h-4 w-4" />
+                                      Suppliers ({rfq.suppliers.length})
+                                    </h4>
+                                    
+                                    {rfq.suppliers.map((supplier, supplierIndex) => (
+                                      <div 
+                                        key={supplierIndex} 
+                                        className="border border-slate-200 dark:border-slate-700 rounded-lg mb-3"
+                                      >
+                                        <div 
+                                          className="p-3 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                                          onClick={() => toggleSupplier(rfq.solicitationNumber, supplier.generatedInternalId)}
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <User className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                                            <div>
+                                              <h5 className="font-medium text-slate-900 dark:text-slate-100">{supplier.recipientName}</h5>
+                                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                {supplier.recipientUEI || "No UEI"}
+                                              </p>
+                                            </div>
+                                          </div>
+                                          <ChevronDown 
+                                            className={`h-5 w-5 text-slate-600 dark:text-slate-400 transition-transform ${expandedSuppliers[rfq.solicitationNumber]?.[supplier.generatedInternalId] ? 'rotate-180' : ''}`} 
+                                          />
+                                        </div>
+                                        
+                                        <AnimatePresence>
+                                          {expandedSuppliers[rfq.solicitationNumber]?.[supplier.generatedInternalId] && (
+                                            <motion.div
+                                              initial={{ opacity: 0, height: 0 }}
+                                              animate={{ opacity: 1, height: "auto" }}
+                                              exit={{ opacity: 0, height: 0 }}
+                                              transition={{ duration: 0.2 }}
+                                              className="p-3 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-200 dark:border-slate-700"
+                                            >
+                                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                  <h6 className="font-medium text-slate-800 dark:text-slate-200 mb-2">Contact Information</h6>
+                                                  <div className="space-y-2">
+                                                    {supplier.contact.map((contact, contactIndex) => (
+                                                      <div key={contactIndex}>
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400">{contact.companyName || "Company Name"}</p>
+                                                        {contact.email && (
+                                                          <div className="flex items-center gap-2 mt-1">
+                                                            <Mail className="h-3 w-3 text-slate-600 dark:text-slate-400" />
+                                                            <span className="text-sm text-slate-700 dark:text-slate-300">{contact.email}</span>
+                                                          </div>
+                                                        )}
+                                                        {contact.phone && (
+                                                          <div className="flex items-center gap-2 mt-1">
+                                                            <Phone className="h-3 w-3 text-slate-600 dark:text-slate-400" />
+                                                            <span className="text-sm text-slate-700 dark:text-slate-300">{contact.phone}</span>
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                                
+                                                <div>
+                                                  <h6 className="font-medium text-slate-800 dark:text-slate-200 mb-2">Location</h6>
+                                                  <div className="space-y-2">
+                                                    <div className="flex items-start gap-2">
+                                                      <MapPin className="h-3 w-3 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+                                                      <span className="text-sm text-slate-700 dark:text-slate-300">
+                                                        {supplier.location.addressLine1 || "Address not provided"}
+                                                      </span>
+                                                    </div>
+                                                    <div className="flex items-start gap-2">
+                                                      <MapPin className="h-3 w-3 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
+                                                      <span className="text-sm text-slate-700 dark:text-slate-300">
+                                                        {supplier.location.cityName}, {supplier.location.stateName} {supplier.location.zip5}
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              
+                                              <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
+                                                <div className="flex items-center justify-between">
+                                                  <div>
+                                                    <h6 className="font-medium text-slate-800 dark:text-slate-200">Award Details</h6>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                                                      Award ID: {supplier.awardId}
+                                                    </p>
+                                                  </div>
+                                                  <div className="text-right">
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400">Award Amount</p>
+                                                    <p className="font-medium text-slate-900 dark:text-slate-100">
+                                                      ${supplier.awardAmount.toLocaleString()}
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </motion.div>
+                                          )}
+                                        </AnimatePresence>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <Building className="h-5 w-5 text-slate-600 dark:text-slate-300 mr-2" />
-                                  <div>
-                                    <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{rfq.agency}</div>
-                                    {rfq.subAgency && (
-                                      <div className="text-sm text-slate-500 dark:text-slate-400">{rfq.subAgency}</div>
-                                    )}
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <Target className="h-5 w-5 text-slate-600 dark:text-slate-300 mr-2" />
-                                  <div>
-                                    <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{rfq.pscDescription}</div>
-                                    <div className="text-sm text-slate-500 dark:text-slate-400">PSC: {rfq.pscCode}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <MapPin className="h-5 w-5 text-slate-600 dark:text-slate-300 mr-2" />
-                                  <div className="text-sm text-slate-900 dark:text-slate-100">{rfq.placeOfPerformance}</div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <Calendar className="h-5 w-5 text-slate-600 dark:text-slate-300 mr-2" />
-                                  <div className="text-sm text-slate-900 dark:text-slate-100">
-                                    {rfq.deliveryDate ? new Date(rfq.deliveryDate).toLocaleDateString() : "Not specified"}
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <DollarSign className="h-5 w-5 text-slate-600 dark:text-slate-300 mr-2" />
-                                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                    ${rfq.suppliers[0].awardAmount.toLocaleString()}
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <Package className="h-5 w-5 text-slate-600 dark:text-slate-300 mr-2" />
-                                  <div>
-                                    <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{rfq.suppliers[0].recipientName}</div>
-                                    <div className="text-sm text-slate-500 dark:text-slate-400">{rfq.suppliers[0].naics.description}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex flex-col gap-1">
-                                  <span className="inline-flex items-center text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-1 rounded">
-                                    <Mail className="h-3 w-3 mr-1" />
-                                    {rfq.suppliers[0].contact[0].email}
-                                  </span>
-                                  <span className="inline-flex items-center text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-1 rounded">
-                                    <Phone className="h-3 w-3 mr-1" />
-                                    {rfq.suppliers[0].contact[0].phone}
-                                  </span>
-                                </div>
-                              </td>
-                            </motion.tr>
-                          ))}
-                        </tbody>
-                      </table>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      ))}
                     </div>
                   </motion.div>
                 )}
