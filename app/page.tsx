@@ -1,20 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Package, 
-  MapPin, 
-  DollarSign, 
-  Building, 
-  Phone, 
+import {
+  Package,
+  MapPin,
+  DollarSign,
+  Building,
+  Phone,
   Mail,
   Calendar,
   Award,
@@ -26,133 +26,28 @@ import { SupplierGroupType } from "@/model/supplier";
 export default function Home() {
   const [rfqData, setRfqData] = useState<SupplierGroupType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [naics, setNaics] = useState("");
+  const [psc, setPsc] = useState("");
+  const [agency, setAgency] = useState("");
+  const [limit, setLimit] = useState(20);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     // Simulate API fetch
     const fetchData = async () => {
       try {
-        // In a real app, you would fetch from your API or database
-        // const response = await fetch('/api/rfq');
-        // const data = await response.json();
-        
-        // Mock data for demonstration
-        const mockData: SupplierGroupType[] = [
-          {
-            _id: "1",
-            naicsCode: "541611",
-            naicsDescription: "Computer Systems Design Services",
-            pscCode: "B300",
-            pscDescription: "Computer and Data Processing Services",
-            solicitationNumber: "SBA-2023-0001",
-            contractType: "BOA",
-            agency: "Department of Defense",
-            subAgency: "Army Contracting Command",
-            majorCommand: "US Army",
-            placeOfPerformance: "Fort Bragg, NC",
-            deliveryDate: "2024-06-30",
-            smallBusinessOnly: true,
-            suppliers: [
-              {
-                internalId: 1,
-                recipientName: "Tech Solutions Inc.",
-                recipientUEI: "ABC123456789",
-                contact: [
-                  {
-                    companyName: "Tech Solutions Inc.",
-                    uei: "ABC123456789",
-                    email: "contact@techsolutions.com",
-                    phone: "(555) 123-4567"
-                  }
-                ],
-                location: {
-                  countryCode: "US",
-                  countryName: "United States",
-                  stateCode: "NC",
-                  stateName: "North Carolina",
-                  cityName: "Raleigh",
-                  countyCode: "055",
-                  countyName: "Wake County",
-                  addressLine1: "123 Tech Street",
-                  addressLine2: "Suite 100",
-                  congressionalCode: "01",
-                  zip4: "1234",
-                  zip5: "27601"
-                },
-                awardAmount: 500000,
-                awardId: "AWD-2023-001",
-                naics: {
-                  code: "541611",
-                  description: "Computer Systems Design Services"
-                },
-                psc: {
-                  code: "B300",
-                  description: "Computer and Data Processing Services"
-                },
-                generatedInternalId: "SUP-001"
-              }
-            ],
-            createdAt: new Date(),
-            updatedAt: new Date()
-          },
-          {
-            _id: "2",
-            naicsCode: "541611",
-            naicsDescription: "Computer Systems Design Services",
-            pscCode: "B300",
-            pscDescription: "Computer and Data Processing Services",
-            solicitationNumber: "SBA-2023-0002",
-            contractType: "FSS",
-            agency: "Department of Homeland Security",
-            subAgency: "Cybersecurity and Infrastructure Security Agency",
-            majorCommand: "CISA",
-            placeOfPerformance: "Washington, DC",
-            deliveryDate: "2024-09-30",
-            smallBusinessOnly: false,
-            suppliers: [
-              {
-                internalId: 2,
-                recipientName: "Secure Systems LLC",
-                recipientUEI: "XYZ987654321",
-                contact: [
-                  {
-                    companyName: "Secure Systems LLC",
-                    uei: "XYZ987654321",
-                    email: "info@securesystems.com",
-                    phone: "(555) 987-6543"
-                  }
-                ],
-                location: {
-                  countryCode: "US",
-                  countryName: "United States",
-                  stateCode: "DC",
-                  stateName: "District of Columbia",
-                  cityName: "Washington",
-                  countyCode: "001",
-                  countyName: "District of Columbia",
-                  addressLine1: "456 Security Avenue",
-                  congressionalCode: "01",
-                  zip4: "5678",
-                  zip5: "20001"
-                },
-                awardAmount: 1250000,
-                awardId: "AWD-2023-002",
-                naics: {
-                  code: "541611",
-                  description: "Computer Systems Design Services"
-                },
-                psc: {
-                  code: "B300",
-                  description: "Computer and Data Processing Services"
-                },
-                generatedInternalId: "SUP-002"
-              }
-            ],
-            createdAt: new Date(),
-            updatedAt: new Date()
+        const get = async () => {
+          const res = await fetch(`/api/supplier?naics=${naics}&psc=${psc}&agency=${agency}&limit=${limit}&page=${page}`, {
+            method: "GET",
+            cache: "no-store"
+          })
+          if (res.ok) {
+            const result = await res.json();
+            setRfqData(result.data);
           }
-        ];
-        
-        setRfqData(mockData);
+        }
+        get();
+
         setLoading(false);
       } catch (error) {
         console.error("Error fetching RFQ data:", error);
@@ -166,7 +61,7 @@ export default function Home() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-center"
@@ -187,7 +82,7 @@ export default function Home() {
         className="max-w-7xl mx-auto"
       >
         <div className="mb-8 text-center">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -195,7 +90,7 @@ export default function Home() {
           >
             RFQ Dashboard
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
@@ -208,7 +103,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rfqData.map((rfq, index) => (
             <motion.div
-              key={rfq._id}
+              key={index}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
@@ -226,7 +121,7 @@ export default function Home() {
                         {rfq.contractType}
                       </CardDescription>
                     </div>
-                    <Badge 
+                    <Badge
                       variant={rfq.smallBusinessOnly ? "default" : "secondary"}
                       className="text-xs"
                     >
@@ -234,7 +129,7 @@ export default function Home() {
                     </Badge>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="space-y-4">
                   <div className="flex items-start gap-3">
                     <Building className="h-5 w-5 text-slate-500 dark:text-slate-400 mt-0.5" />
@@ -328,7 +223,7 @@ export default function Home() {
         </div>
 
         {rfqData.length === 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-12"

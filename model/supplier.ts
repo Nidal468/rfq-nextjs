@@ -61,7 +61,7 @@ export interface SupplierType {
   recipientName: string
   recipientUEI: string | null
 
-  contact?: ContactType[]
+  contact: ContactType[]
 
   location: LocationType
 
@@ -109,6 +109,7 @@ const SupplierSchema = new Schema<SupplierType>({
 /* ================= SUPPLIER GROUP ================= */
 
 export interface SupplierGroupType extends Document {
+  source: string
   naicsCode: string
   naicsDescription: string
 
@@ -137,6 +138,7 @@ export interface SupplierGroupType extends Document {
 
 const SupplierGroupSchema = new Schema<SupplierGroupType>(
   {
+    source: { type: String },
     naicsCode: { type: String, index: true },
     naicsDescription: String,
 
