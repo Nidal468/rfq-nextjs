@@ -103,7 +103,7 @@ const SupplierSchema = new Schema<SupplierType>({
     description: String
   },
 
-  generatedInternalId: { type: String, unique: true }
+  generatedInternalId: { type: String }
 })
 
 /* ================= SUPPLIER GROUP ================= */
