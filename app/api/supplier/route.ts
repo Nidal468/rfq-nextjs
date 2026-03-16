@@ -7,15 +7,7 @@ export async function POST(req: Request) {
 
         const data = await req.json()
 
-        const supplier = await SupplierModel.findOneAndUpdate(
-            { solicitationNumber: data.solicitationNumber }, // match existing
-            { $set: data }, // update with new data
-            {
-                new: true,    // return updated document
-                upsert: true, // create if not exists
-                runValidators: true
-            }
-        )
+        const supplier = await SupplierModel.create(data)
 
         return Response.json({
             success: true,
@@ -25,7 +17,7 @@ export async function POST(req: Request) {
         console.error(error)
 
         return Response.json(
-            { success: false, error: "Failed to create or update supplier" },
+            { success: false, error: "Failed to create supplier" },
             { status: 500 }
         )
     }
